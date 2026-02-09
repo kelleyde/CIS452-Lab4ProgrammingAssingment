@@ -1,4 +1,3 @@
-// File creation
 #include <errno.h>
 #include <unistd.h>
 #include <string.h>
@@ -10,24 +9,37 @@
 void* findFile (void* arg);
 void sigHandler (int sigNum);
 int fileRequests = 0;
+int keepRunning = 1;
 
 int main() {
-    while(1){
+    signal (SIGINT, sigHandler);
+
+    while(keepRunning){
     	pthread_t thread1;
 	    char* arg1 = malloc(300);	
-    	scanf("%s", arg1);
-        pthread_create(&thread1, NULL, findFile, (void*)arg1);
+    	
+        if (scanf("%s", arg1) != 1){
+            free(arg1);
+            break;
+        }
+
+        int threadStatus = pthread_create(&thread1, NULL, findFile, (void*)arg1);
+        if (threadStatus != 0) {
+            fprintf(stderr, "Error creating thread\n");
+            free(arg1);
+            break;
+        }
+
         fileRequests++;
         pthread_detach(thread1);
-        //free(arg1);
     }
 
-    signal (SIGINT, sigHandler);
+    printf("The total number of file requests is %d\n", fileRequests);
+
     return 0;
 }
 
 void* findFile (void* arg) {
-    // pthread_detach(pthread_self());
     char* filename = (char*)arg;
 
     if (rand() % 100 < 80) {
@@ -36,13 +48,17 @@ void* findFile (void* arg) {
         sleep(7 + rand() % 4);
     }
     printf("File %s accessed\n", filename);
+    free(filename);
+
     return NULL;
 }
 
 void sigHandler (int sigNum)
 {
- if(sigNum == SIGINT){
- printf ("Exit Gracefully\n");
- exit(0);
- }
+    if(sigNum == SIGINT){
+        printf ("Exit Gracefully\n");
+        keepRunning = 0;
+        printf("The total number of file requests is %d\n", fileRequests);
+        exit(0);
+    }
 }
