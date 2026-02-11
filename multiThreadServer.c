@@ -18,7 +18,7 @@ int main() {
     	pthread_t thread1;
 	    char* arg1 = malloc(300);	
     	
-        if (scanf("%s", arg1) != 1){
+        if (scanf("%299s", arg1) != 1){
             free(arg1);
             break;
         }
@@ -34,6 +34,8 @@ int main() {
         pthread_detach(thread1);
     }
 
+    printf("Wait for all file requests to complete (max 10 seconds)\n");
+    sleep(11);
     printf("The total number of file requests is %d\n", fileRequests);
 
     return 0;
@@ -58,7 +60,6 @@ void sigHandler (int sigNum)
     if(sigNum == SIGINT){
         printf ("Exit Gracefully\n");
         keepRunning = 0;
-        printf("The total number of file requests is %d\n", fileRequests);
-        exit(0);
+        fclose(stdin);
     }
 }
